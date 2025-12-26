@@ -269,29 +269,6 @@
         </div>
     </div>
 
-    
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  push,
-  update,
-  remove,
-  onValue,
-  runTransaction
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCiSlpHSVj3NPOq4NO7MhS_xPiqCipmMAo",
-  authDomain: "tropa-do-qg.firebaseapp.com",
-  databaseURL: "https://tropa-do-qg-default-rtdb.firebaseio.com",
-  projectId: "tropa-do-qg",
-  storageBucket: "tropa-do-qg.appspot.com",
-  messagingSenderId: "1050965334818",
-  appId: "1:1050965334818:web:55ceb510e476b4b686237b"
-};
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         window.user = JSON.parse(localStorage.getItem('tg_user')) || null;
@@ -453,5 +430,23 @@ const firebaseConfig = {
     </script>
   
 </body>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCiSlpHSVj3NPOq4NO7MhS_xPiqCipmMAo",
+    authDomain: "tropa-do-qg.firebaseapp.com",
+    projectId: "tropa-do-qg",
+    storageBucket: "tropa-do-qg.firebasestorage.app",
+    messagingSenderId: "1050965334818",
+    appId: "1:1050965334818:web:55ceb510e476b4b686237b"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
 </html>
