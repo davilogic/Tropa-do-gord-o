@@ -190,7 +190,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, update, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, push, get, update, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBwFisjsjllEifyvbo_WVTdkaIaD7NalqU",
@@ -209,7 +209,7 @@
             setTimeout(() => {
                 document.getElementById('loading').style.display = 'none';
                 if(window.user) {
-                    onValue(ref(db, 'users/' + window.user.nick), (s) => {
+                    get(ref(db, 'users/' + window.user.nick), (s) => {
                         const d = s.val();
                         if(!d) return;
                         if(d.status === 'banido') { alert("VOCÊ FOI BANIDO!"); localStorage.clear(); location.reload(); return; }
@@ -243,7 +243,7 @@
             const n = document.getElementById('u-nick').value.trim();
             const p = document.getElementById('u-pass').value.trim();
             if(!n || !p) return;
-            onValue(ref(db, 'users/'+n), s => {
+            get(ref(db, 'users/'+n), s => {
                 const d = s.val();
                 if(d && d.pass === p) { localStorage.setItem('tg_user', JSON.stringify(d)); location.reload(); }
                 else if(!d) {
@@ -298,7 +298,7 @@
             });
 
             // FEED FORMS
-            onValue(ref(db, 'forms'), s => {
+            get(ref(db, 'forms'), s => {
                 const feed = document.getElementById('feed-forms'); feed.innerHTML = "";
                 s.forEach(k => {
                     const f = k.val();
@@ -325,7 +325,7 @@
 
             // STAFF CHAT
             if(isStaff) {
-                onValue(ref(db, 'staff_chat'), s => {
+                get(ref(db, 'staff_chat'), s => {
                     const b = document.getElementById('staff-chat-box'); b.innerHTML = "";
                     s.forEach(k => { const d = k.val(); b.innerHTML += `<div><b>${d.u}:</b> ${d.m}</div>`; });
                     b.scrollTop = b.scrollHeight;
@@ -333,18 +333,18 @@
             }
 
             // FORUM & NOTICES (MANTIDOS)
-            onValue(ref(db, 'forum'), s => {
+            get(ref(db, 'forum'), s => {
                 const l = document.getElementById('forum-list'); l.innerHTML = "";
                 s.forEach(k => { const m = k.val(); l.innerHTML = `<div class="card">${isStaff ? `<i class="fas fa-trash del-btn" onclick="apagar('forum/${k.key}')"></i>` : ''}<b class="tag tag-${m.tag}">[${m.tag}]</b> <b>${m.u}</b><p>${m.m}</p>${m.img ? `<img src="${m.img}" style="width:100%; border-radius:8px">` : ''}</div>` + l.innerHTML; });
             });
-            onValue(ref(db, 'notices'), s => {
+            get(ref(db, 'notices'), s => {
                 const f = document.getElementById('news-feed'); f.innerHTML = "";
                 s.forEach(k => { const n = k.val(); let media = n.img ? `<img src="${n.img}" style="width:100%; margin-top:10px; border-radius:8px">` : ''; if(n.vid) media += `<iframe style="width:100%; height:200px; margin-top:10px" src="${n.vid.replace('watch?v=', 'embed/')}" frameborder="0"></iframe>`; f.innerHTML = `<div class="card" style="border-left:4px solid gold">${isStaff ? `<i class="fas fa-trash del-btn" onclick="apagar('notices/${k.key}')"></i>` : ''}<b style="color:gold">[STAFF] ${n.u}</b><p>${n.m}</p>${media}</div>` + f.innerHTML; });
             });
         }
 
         window.lerMais = (id) => {
-            onValue(ref(db, `forms/${id}`), s => {
+            get(ref(db, `forms/${id}`), s => {
                 const f = s.val(); let h = ""; f.res.forEach((r,i) => h += `<p style='margin:5px 0'><b>${i+1}. ${PERGUNTAS[i]}:</b><br><span style='color:white'>${r}</span></p><hr style='border:0.1px solid #222'>`);
                 document.getElementById('modal-body').innerHTML = h; document.getElementById('form-modal').style.display = 'block';
             }, {onlyOnce:true});
@@ -356,7 +356,7 @@
         window.postarStaffChat = () => { const m = document.getElementById('staff-msg').value; if(m) push(ref(db, 'staff_chat'), { u:window.user.nick, m }); document.getElementById('staff-msg').value = ""; };
         window.postarForum = () => { const m = document.getElementById('f-msg').value; const file = document.getElementById('f-img').files[0]; if(file) { const r = new FileReader(); r.onload = (e) => push(ref(db, 'forum'), { u:window.user.nick, tag:window.user.tag, m, img:e.target.result }); r.readAsDataURL(file); } else if(m) push(ref(db, 'forum'), { u:window.user.nick, tag:window.user.tag, m }); };
         window.postarAviso = () => { const m = document.getElementById('n-txt').value; const vid = document.getElementById('n-vid').value; const file = document.getElementById('n-img').files[0]; const send = (img) => push(ref(db, 'notices'), { u:window.user.nick, m, vid, img }); if(file) { const r = new FileReader(); r.onload = (e) => send(e.target.result); r.readAsDataURL(file); } else send(null); };
-        window.verPerfil = (nick) => { onValue(ref(db, 'users/'+nick), s => { const d = s.val(); document.getElementById('prof-pic').src = d.pic||'https://i.imgur.com/6VBx3io.png'; document.getElementById('prof-nick').innerText = d.nick; document.getElementById('prof-tag-box').innerHTML = `<span class="tag tag-${d.tag}">[${d.tag}]</span>`; document.getElementById('prof-xp').innerText = (d.xp||0) + " XP"; document.getElementById('self-edit').style.display = (nick === window.user.nick)?'block':'none'; showPage('page-profile'); }, {onlyOnce:true}); };
+        window.verPerfil = (nick) => { get(ref(db, 'users/'+nick), s => { const d = s.val(); document.getElementById('prof-pic').src = d.pic||'https://i.imgur.com/6VBx3io.png'; document.getElementById('prof-nick').innerText = d.nick; document.getElementById('prof-tag-box').innerHTML = `<span class="tag tag-${d.tag}">[${d.tag}]</span>`; document.getElementById('prof-xp').innerText = (d.xp||0) + " XP"; document.getElementById('self-edit').style.display = (nick === window.user.nick)?'block':'none'; showPage('page-profile'); }, {onlyOnce:true}); };
         window.saveProfile = () => { const bio = document.getElementById('new-bio').value; const file = document.getElementById('new-pic-file').files[0]; if(file) { const r = new FileReader(); r.onload = (e) => update(ref(db, 'users/'+window.user.nick), { bio, pic:e.target.result }).then(()=>location.reload()); r.readAsDataURL(file); } else update(ref(db, 'users/'+window.user.nick), { bio }).then(()=>location.reload()); };
     </script>
 </body>
