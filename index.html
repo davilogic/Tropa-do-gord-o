@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TROPA DO GORDÃO | PAINEL</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+
+<style>
+:root{--primary:#ff0000;--bg:#000;--card:#0a0a0a;--border:#440000;--gold:#ffd700;--discord:#5865F2}
+*{box-sizing:border-box;font-family:'Orbitron',sans-serif}
+body{margin:0;background:#000;color:#fff}
+.page{display:none;min-height:100vh;padding-bottom:120px}
+.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;margin:12px}
+.btn{border:none;padding:12px;border-radius:6px;font-weight:900;width:100%;cursor:pointer}
+.btn-red{background:red;color:#fff}
+.btn-green{background:#00ff44;color:#000}
+input,textarea{width:100%;padding:10px;margin:5px 0;background:#111;border:1px solid #333;color:#fff;border-radius:5px}
+.header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:2px solid red}
+.tag{font-size:10px;padding:3px 6px;border-radius:4px}
+.tag-membro{background:#555}
+.tag-admin{background:#00ccff;color:#000}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<b style="color:red">TDG</b>
+<i class="fas fa-user-shield" onclick="showPage('admin')"></i>
+</div>
+
+<div id="login" class="page active">
+<div class="card">
+<h2 style="color:red;text-align:center">LOGIN</h2>
+<input id="nick" placeholder="Nick">
+<input id="pass" type="password" placeholder="Senha">
+<button class="btn btn-red" onclick="auth()">ENTRAR / REGISTRAR</button>
+</div>
+</div>
+
+<div id="main" class="page">
+<div class="card">
+<button class="btn btn-green" onclick="showPage('form')">FORMULÁRIO</button>
+</div>
+<div id="forms"></div>
+</div>
+
+<div id="form" class="page">
+<div class="card">
+<h3 style="color:red">FORMULÁRIO</h3>
+<textarea class="qa" placeholder="Por que quer entrar?"></textarea>
+<textarea class="qa" placeholder="Experiência em RP?"></textarea>
+<button class="btn btn-green" onclick="enviarForm()">ENVIAR</button>
+<button class="btn btn-red" onclick="showPage('main')">VOLTAR</button>
+</div>
+</div>
+
+<div id="admin" class="page">
+<div class="card">
+<h3 style="color:cyan">ADMIN</h3>
+<input id="target" placeholder="Nick">
+<input id="xp" type="number" placeholder="XP">
+<button class="btn btn-green" onclick="darXP()">DAR XP</button>
+<button class="btn btn-red" onclick="showPage('main')">VOLTAR</button>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+/* 🔥 FIREBASE (SEM ERRO) */
+const firebaseConfig = {
+  apiKey: "AIzaSyCiSlpHSVj3NPOq4NO7MhS_xPiqCipmMAo",
+  authDomain: "tropa-do-qg.firebaseapp.com",
+  databaseURL: "https://tropa-do-qg-default-rtdb.firebaseio.com",
+  projectId: "tropa-do-qg",
+  storageBucket: "tropa-do-qg.appspot.com",
+  messagingSenderId: "1050965334818",
+  appId: "1:1050965334818:web:55ceb510e476b4b686237b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let user = JSON.parse(localStorage.getItem("user")) || null;
+
+/* ===== FUNÇÕES ===== */
+
+window.showPage = (id)=>{
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+};
+
+window.auth = ()=>{
+const n = nick.value.trim();
+const p = pass.value.trim();
+if(!n||!p) return;
+
+onValue(ref(db,"users/"+n),s=>{
+const d=s.val();
+if(d){
+ if(d.pass===p){user=d;localStorage.setItem("user",JSON.stringify(d));showPage("main");load();}
+ else alert("Senha errada");
+}else{
+ const nu={nick:n,pass:p,tag:"membro",xp:0};
+ set(ref(db,"users/"+n),nu).then(()=>{
+ user=nu;localStorage.setItem("user",JSON.stringify(nu));
+ showPage("main");load();
+ });
+}
+},{onlyOnce:true});
+};
+
+function load(){
+onValue(ref(db,"forms"),s=>{
+forms.innerHTML="";
+s.forEach(k=>{
+const f=k.val();
+forms.innerHTML+=`
+<div class="card">
+<b>${f.u}</b>
+<p>${f.res.join("<br>")}</p>
+</div>`;
+});
+});
+}
+
+window.enviarForm=()=>{
+const res=[...document.querySelectorAll(".qa")].map(i=>i.value);
+if(res.some(r=>r=="")) return alert("Preenche tudo");
+push(ref(db,"forms"),{u:user.nick,res});
+showPage("main");
+};
+
+window.darXP=()=>{
+const n=target.value;
+const x=parseInt(xp.value)||0;
+update(ref(db,"users/"+n),{xp:x});
+alert("OK");
+};
+
+if(user){showPage("main");load();}
+</script>
+
+</body>
+</html>
